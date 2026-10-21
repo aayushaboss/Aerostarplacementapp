@@ -27,7 +27,7 @@ jobs:
       - run: flutter pub get
 
       # base-href must match the repo name — GitHub Pages serves this
-      # project at https://<user>.github.io/aerostar_edge_placementapp_frontend/, not
+      # project at https://<user>.github.io/Aerostarplacementapp/, not
       # domain root, so every asset path needs that prefix baked in.
       #
       # --no-tree-shake-icons is required, not optional: this app mixes
@@ -45,7 +45,7 @@ jobs:
       # browser from other Flutter web apps, and it removes several MB of
       # canvaskit/*.wasm from this site's own payload — a meaningful chunk
       # of first-load time.
-      - run: flutter build web --release --base-href /aerostar_edge_placementapp_frontend/ --no-tree-shake-icons --pwa-strategy=none
+      - run: flutter build web --release --base-href /Aerostarplacementapp/ --no-tree-shake-icons --pwa-strategy=none
 
       - uses: actions/upload-pages-artifact@v3
         with:
