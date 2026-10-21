@@ -1,0 +1,31 @@
+# Aerostar — Design System Rules
+
+Full detail: `.cursor/rules/design-system.mdc`. Summary:
+
+The design system in `lib/theme/` (`AppColors`, `AppSpacing`, `AppRadius`,
+`AppFontWeight`, `AppTextStyles`, `AppShadows`, `AppTheme`) is frozen and
+mirrors the original React Native app's `theme.ts` exactly. Before adding
+any color, spacing, radius, shadow, font, or icon value, check whether an
+existing token already covers it.
+
+Hard rules:
+1. Never add a new class to `lib/theme/` (no `AppSizes`, `AppBorders`, etc.)
+   without asking the user first — reuse or extend the existing files.
+2. Font is Poppins only, everywhere — every `TextStyle` must use
+   `AppTextStyles` or explicitly set `fontFamily: kFontFamily`.
+3. Icons are `Ionicons` from `flutter_vector_icons` only — never Flutter's
+   built-in `Icons.*` (Material) or `CupertinoIcons`.
+4. Colors only from `AppColors` (a few one-off translucent `Color(0x...)`
+   overlays exist as exact rgba translations from the RN source — those
+   are fine to replicate, not to invent new ones from).
+5. Spacing/radius only from the `AppSpacing`/`AppRadius` scales.
+6. Shadows only from `AppShadows`.
+7. Any structural change to the design system itself (new theme file,
+   renamed token, new font) requires explicit user sign-off before
+   implementation. Feature work does not need this — only the shared
+   `lib/theme/` contract is protected.
+
+This has broken before: a prior session added `AppSizes`/`AppBorders`
+token classes and swapped a shared back-button icon to Material's
+`Icons.arrow_back_ios_new_rounded`. Both had to be reverted. Don't repeat
+either mistake.

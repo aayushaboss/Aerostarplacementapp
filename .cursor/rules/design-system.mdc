@@ -1,0 +1,102 @@
+---
+description: Design system guardrails for Aerostar (Flutter) — prevents token drift and icon/font inconsistency
+globs: lib/**/*.dart
+alwaysApply: true
+---
+
+# Aerostar — Design System Rules
+
+This Flutter app is a screen-by-screen conversion of the Aerostar React
+Native app. The design system was built once, deliberately, to mirror
+`frontend/src/theme.ts` and `design_guidelines.json` from the original RN
+project exactly. **Treat it as frozen.** Every visual value in this app
+already has a home in `lib/theme/`. Before writing any new color, spacing,
+radius, shadow, font, or icon value, look there first.
+
+## The token files (source of truth)
+
+- `lib/theme/colors.dart` → `AppColors` — the only place colors are defined.
+- `lib/theme/spacing.dart` → `AppSpacing` (4/8/12/16/24/32/48) and
+  `AppRadius` (6/12/20/24/999). **Nothing else lives in this file.**
+- `lib/theme/text_styles.dart` → `AppFontWeight` and `AppTextStyles`, all
+  built on `kFontFamily` (Poppins).
+- `lib/theme/shadows.dart` → `AppShadows`.
+- `lib/theme/app_theme.dart` → assembles `ThemeData`, overrides Material's
+  entire default `TextTheme` so no fallback font can ever appear.
+
+## Hard rules
+
+1. **Never add a new token class to `lib/theme/`** (no `AppSizes`,
+   `AppBorders`, `AppDurations`, or similar) without asking the user first
+   and getting explicit sign-off. This has happened before and had to be
+   reverted — every value it introduced (`chip`, `control`, `dot`,
+   `iconMd`, `thin`/`medium`/`thick`) was just arithmetic on existing
+   `AppSpacing` values or a literal, and belonged inline at the call site
+   like every other screen in the app already does it.
+2. **Font is Poppins, everywhere, no exceptions.** Every `TextStyle` must
+   either come from `AppTextStyles.xxx` (optionally `.copyWith(...)`) or
+   explicitly set `fontFamily: kFontFamily`. Never leave `fontFamily`
+   unset on a literal `TextStyle`, and never reference a system or
+   default font.
+3. **Icons are `Ionicons` from `package:flutter_vector_icons`, everywhere,
+   no exceptions.** Never use Flutter's built-in `Icons.*` (Material
+   icons) or `CupertinoIcons`. This mirrors the RN app's actual
+   `@expo/vector-icons` usage (Feather/FontAwesome/Ionicons/MaterialIcons
+   sets — but only Ionicons ended up used in practice, so that's the
+   standard here).
+   - If a specific `Ionicons` glyph doesn't exist in the bundled font
+     (a known gap — e.g. `sparkles` isn't in this package's Ionicons set),
+     substitute the closest existing `Ionicons` glyph and leave a comment
+     explaining the substitution. Do **not** switch that one icon to a
+     different icon family as a workaround.
+   - If `flutter build web` fails on icon tree-shaking (`Codepoint N not
+     found in font, aborting`), the fix is the `--no-tree-shake-icons`
+     build flag — **not** swapping the icon family. This exact mistake
+     happened once already (a shared `BackChevron` widget was switched to
+     `Icons.arrow_back_ios_new_rounded` to dodge this) and had to be
+     reverted.
+4. **Colors only from `AppColors`.** A handful of one-off translucent
+   overlay values (e.g. header image tints, dark circular button
+   backgrounds) exist as raw `Color(0x......)` literals in a few widgets —
+   these are intentional, byte-exact translations of specific `rgba(...)`
+   values from the original RN screens, not tokens. If you need a new
+   translucent overlay, compute it the same way (match the RN source's
+   literal rgba value) rather than approximating or inventing a new shade.
+   **Aerostar colour roles — pages are white, blue is the interactive and
+   informational accent, yellow is the call to action.** Pages, cards and form
+   fields are white / `offWhite` with `ink` text. `AppColors.blue` (#0A2FFF)
+   is for selected chips (solid blue, white label), links and "View all →",
+   the active tab / nav item, focus borders, tags (`blueA10` fill), progress
+   fills, saved bookmarks, secondary buttons (white, blue stroke and label),
+   avatars (blue, white initials), and solid blue hero cards for a feature
+   moment (white text, a yellow eyebrow or icon). `AppColors.brand` / `yellow`
+   (#FFC72C) is the primary CTA fill (ink label, one per screen),
+   success-check circles and small highlights on a blue surface. Yellow is
+   never text or icon colour on white. Interview status uses `violet`.
+   Utility headers use `PageHeaderBar` (white, hairline divider).
+5. **Spacing and radius only from the `AppSpacing` / `AppRadius` scales.**
+   Don't hardcode a raw pixel number where an existing token fits. A few
+   sub-token literals (e.g. `3`, `4` for a progress-bar track or carousel
+   dot) exist because they match a specific one-off value in the original
+   RN source exactly — that's fine to replicate, but don't generalize a
+   new named constant out of them.
+6. **Shadows only from `AppShadows`.** Never construct a raw `BoxShadow`
+   inline.
+7. **Structural changes to the design system itself are a "stop and ask"
+   moment.** Adding a new theme file, renaming an existing token, changing
+   what `AppTheme.light` returns, or introducing a second font — all of
+   these need the user's explicit go-ahead before you touch them. Feature
+   work (new screens, new widgets, new state) does not need this — it's
+   specifically the shared `lib/theme/` contract that's protected.
+
+## Quick self-check before committing a UI change
+
+- Did I add any class to `lib/theme/` that isn't `AppColors`,
+  `AppSpacing`, `AppRadius`, `AppFontWeight`, `AppTextStyles`,
+  `AppShadows`, or `AppTheme`? → stop, ask first.
+- Does every icon in my diff come from `Ionicons`? → grep your diff for
+  `Icons\.` and `CupertinoIcons\.` — both should return nothing.
+- Does every `TextStyle` in my diff either use `AppTextStyles` or set
+  `fontFamily: kFontFamily`? → grep for `TextStyle(` and check each one.
+- Did I hardcode a color, spacing, or radius number that isn't already a
+  named token? → prefer the token.

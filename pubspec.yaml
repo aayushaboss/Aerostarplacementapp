@@ -1,0 +1,106 @@
+name: aerostar_edge
+description: "Aerostar — student career app (Flutter, mock-data prototype)."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Required for CupertinoDatePicker/CupertinoPicker (the wheel-style
+  # date/year pickers) — MaterialApp doesn't include CupertinoLocalizations
+  # by default, and CupertinoDatePicker throws on build without it.
+  flutter_localizations:
+    sdk: flutter
+
+  # Navigation — path-based routing, closest match to expo-router
+  go_router: ^15.1.2
+
+  # HTTP client for the Http*Repository seam (lib/data/) — not exercised
+  # yet (DataConfig.mode defaults to mock), but the interceptor/timeout/
+  # error-mapping plumbing in lib/data/api_client.dart needs a real client
+  # underneath it.
+  dio: ^5.7.0
+
+  # Icons — mirrors @expo/vector-icons sets actually used: Feather, FontAwesome/5/6, Ionicons, MaterialIcons
+  flutter_vector_icons: ^2.0.0
+
+  # State shared across screens (segment, user) + persistence across restarts
+  provider: ^6.1.2
+  shared_preferences: ^2.3.3
+
+  # Date formatting (date-fns/dayjs equivalent) — pinned to match the
+  # version flutter_localizations (added for CupertinoLocalizations) requires.
+  intl: ^0.20.2
+
+  # File/photo picking (expo-document-picker / expo-image-picker equivalents)
+  # Bumped from ^8.1.4 — the old version's Android module hardcoded
+  # compileSdk 34, which broke the release build once
+  # flutter_plugin_android_lifecycle (bundled with this Flutter SDK)
+  # started requiring compileSdk 36+. Only call site is
+  # resume_screen.dart's FilePicker.platform.pickFiles(...), a stable
+  # core API unaffected by the version jump.
+  file_picker: ^13.1.0
+  image_picker: ^1.1.2
+
+  # "Add to Calendar" — opens Google Calendar with the booking prefilled
+  url_launcher: ^6.3.1
+
+  # Resume PDF export — builds the document on-device and hands it to the
+  # platform's native save/share/print sheet.
+  pdf: ^3.11.3
+  printing: ^5.14.2
+
+  # Disk-caches remote images (thumbnails, hero photos) so repeat views —
+  # switching tabs, reopening a card, revisiting a screen — paint instantly
+  # instead of re-fetching over the network every time.
+  cached_network_image: ^3.4.1
+
+  cupertino_icons: ^1.0.8
+
+  # Renders the official multi-color Google/Gmail logomarks (auth buttons) —
+  # flutter_vector_icons only has flat single-color brand glyphs.
+  flutter_svg: ^2.0.10+1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_native_splash: ^2.4.3
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/data/
+
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins_400Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Poppins_500Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins_600SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins_700Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Poppins_800ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/Poppins_900Black.ttf
+          weight: 900
+
+flutter_native_splash:
+  # The web build uses the in-app splash screen; the tool's web splash markup
+  # is never removed at runtime, so keep it off.
+  web: false
+  color: "#FFFFFF"
+  image: assets/images/splash-image.png
+  android_12:
+    color: "#FFFFFF"
+    image: assets/images/splash-image.png

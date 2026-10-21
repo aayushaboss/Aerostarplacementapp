@@ -1,0 +1,62 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+
+      # base-href must match the repo name — GitHub Pages serves this
+      # project at https://<user>.github.io/aerostar_edge_placementapp_frontend/, not
+      # domain root, so every asset path needs that prefix baked in.
+      #
+      # --no-tree-shake-icons is required, not optional: this app mixes
+      # multiple icon font packages (flutter_vector_icons + Cupertino), and
+      # Flutter's default icon tree-shaker aborts the build entirely
+      # ("Codepoint ... not found in font") when it tries to subset them —
+      # confirmed by testing without the flag. --no-web-resources-cdn is
+      # deliberately NOT passed here (unlike this repo's local/dev build
+      # commands, which need it because that sandbox has no outbound
+      # internet during `flutter build`) — this CI runner has full internet
+      # access, so the deployed build should load CanvasKit from Google's
+      # CDN (https://www.gstatic.com/flutter-canvaskit) at runtime instead
+      # of bundling and self-serving it from GitHub Pages. That CDN is
+      # globally distributed and likely already cached in a visitor's
+      # browser from other Flutter web apps, and it removes several MB of
+      # canvaskit/*.wasm from this site's own payload — a meaningful chunk
+      # of first-load time.
+      - run: flutter build web --release --base-href /aerostar_edge_placementapp_frontend/ --no-tree-shake-icons --pwa-strategy=none
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
